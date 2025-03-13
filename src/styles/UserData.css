@@ -6,7 +6,7 @@ body {
   min-height: 100vh;
   margin: 0;
   font-family: "Arial", sans-serif;
-  background: linear-gradient(to bottom, #ff8000, #f3d1a4); /* Orange gradient background */
+  background: white; /* Orange gradient background */
   padding-right: 5vw; /* Adds some spacing from the right */
 }
 
