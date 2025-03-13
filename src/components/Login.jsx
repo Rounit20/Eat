@@ -2,9 +2,15 @@ import React, { useState } from "react";
 import "./Login.css";
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import { AiFillGoogleCircle, AiFillFacebook, AiFillApple } from "react-icons/ai";
-import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { auth, googleProvider, db } from "../firebase"; // Import Firestore
-import { doc, getDoc } from "firebase/firestore"; // Firestore functions
+import { 
+  signInWithEmailAndPassword, 
+  signInWithPopup, 
+  fetchSignInMethodsForEmail, 
+  EmailAuthProvider, 
+  linkWithCredential 
+} from "firebase/auth";
+import { auth, googleProvider, db } from "../firebase";
+import { doc, getDoc } from "firebase/firestore"; 
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
@@ -17,18 +23,32 @@ const Login = () => {
   // Handle email/password login
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate("/"); // Redirect to home page after login
+      navigate("/home"); // Redirect after successful login
     } catch (error) {
-      setError(error.message);
+      console.error("Login Error:", error.code, error.message);
+
+      if (error.code === "auth/wrong-password" || error.code === "auth/user-not-found") {
+        // Check if the user signed up with Google before
+        const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+
+        if (signInMethods.includes("google.com")) {
+          setError("You signed up with Google. Try logging in with Google instead.");
+        } else {
+          setError("Invalid credentials. Please check your email or password.");
+        }
+      } else {
+        setError("Login failed. Please try again.");
+      }
     }
   };
 
-  // Handle Google Sign-In (only if user exists in Firestore)
+  // Handle Google Sign-In (Link with Email/Password if needed)
   const handleGoogleSignIn = async () => {
     try {
-      // Get user email from Google provider
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
@@ -36,12 +56,13 @@ const Login = () => {
       const userDoc = await getDoc(doc(db, "users", user.uid));
 
       if (userDoc.exists()) {
-        navigate("/"); // Allow sign-in and redirect
+        navigate("/home");
       } else {
         setError("Google Sign-In is restricted. Please sign up first.");
-        await auth.signOut(); // Sign out user if they didn't sign up
+        await auth.signOut();
       }
     } catch (error) {
+      console.error("Google Sign-In Error:", error.code, error.message);
       setError(error.message);
     }
   };
@@ -53,7 +74,7 @@ const Login = () => {
           <img src="https://cdn-icons-png.flaticon.com/512/786/786408.png" alt="Login Icon" width="50" />
         </div>
         <h2>Sign in with email</h2>
-        <p>Make a new doc to bring your words, data, and teams together. For free</p>
+        <p>Sign in to order delicious meals anytime, anywhere!</p>
 
         {error && <p className="error-message">{error}</p>}
 

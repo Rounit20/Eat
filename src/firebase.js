@@ -1,24 +1,22 @@
-// Import Firebase modules
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore"; 
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";  // ✅ Import Storage
 
-// Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyAbjFMBYmtkrUOpp7tNSpr7mOANiggnT-0",
-    authDomain: "eatbit-60179.firebaseapp.com",
-    projectId: "eatbit-60179",
-    storageBucket: "eatbit-60179.appspot.com",
-    messagingSenderId: "231662062816",
-    appId: "1:231662062816:web:b603a65093a315bdae5485",
-    measurementId: "G-27QD1PYJJ2"
+  apiKey: "AIzaSyCpGI_nv1eBwKHc99wmiF48ogOef5UYLzc",
+  authDomain: "eatbit-adbda.firebaseapp.com",
+  projectId: "eatbit-adbda",
+  storageBucket: "eatbit-adbda.appspot.com",  // ✅ Ensure storage is set up
+  messagingSenderId: "143894279429",
+  appId: "1:143894279429:web:a67ddaf9c6e10bddfdf36c",
+  measurementId: "G-0EJT77RCF4"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
-const db = getFirestore(app); // ✅ Move this after initializing `app`
+const db = getFirestore(app);
+const storage = getStorage(app);  // ✅ Initialize Storage
 
-// Export modules
-export { app, auth, googleProvider, db };
+export { app, auth, googleProvider, db, storage };
