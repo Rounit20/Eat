@@ -54,7 +54,7 @@ const Navbar = ({ user }) => {
           <img
             src="/eatbit-logo-dark.png"
             alt="EatBit Logo"
-            style={{ height: "50px" }} // Adjust size as needed
+            style={{ height: "40px" }} // Adjust size as needed
           />
         </Link>
       </div>
