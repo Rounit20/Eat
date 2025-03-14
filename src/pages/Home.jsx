@@ -1,20 +1,18 @@
 import { useState, useEffect } from "react";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
-import { Link, useNavigate, NavLink } from 'react-router-dom';
+import { Link, useNavigate, NavLink } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
 import React from "react";
-
-
+import { FaUserCircle } from "react-icons/fa"; // Default user icon
 
 const Home = () => {
   const navigate = useNavigate();
   const [user, loading, error] = useAuthState(auth);
+  const [isPopupVisible, setPopupVisible] = useState(false);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
-  const [isPopupVisible, setPopupVisible] = useState(false);
-
 
   const handleLogout = async () => {
     try {
@@ -26,11 +24,6 @@ const Home = () => {
   };
 
   const togglePopup = () => setPopupVisible((prev) => !prev);
-  const faqs = [
-    { question: "What is your return policy?", answer: "You can return any item within 30 days of purchase." },
-    { question: "How do I track my order?", answer: "You can track your order through the 'My Orders' section." },
-    { question: "Do you offer international shipping?", answer: "Yes, we ship to most countries worldwide." }
-  ];
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -43,15 +36,24 @@ const Home = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isPopupVisible]);
 
+  const faqs = [
+    { question: "What is your return policy?", answer: "You can return any item within 30 days of purchase." },
+    { question: "How do I track my order?", answer: "You can track your order through the 'My Orders' section." },
+    { question: "Do you offer international shipping?", answer: "Yes, we ship to most countries worldwide." },
+  ];
+
   return (
     <>
-      <div className="app-container" style={{
-        backgroundColor: "white",
-        paddingTop: "75px",
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100vh"
-      }}>
+      <div
+        className="app-container"
+        style={{
+          backgroundColor: "white",
+          paddingTop: "75px",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh",
+        }}
+      >
         <nav
           className="navbar"
           style={{
@@ -84,62 +86,77 @@ const Home = () => {
           {/* User Profile */}
           {user && (
             <div className="user-profile" style={{ display: "flex", alignItems: "center", position: "relative" }}>
-              <img
-                src={user.photoURL || "/default-avatar.png"}
-                alt="User Avatar"
-                aria-label="User profile"
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  cursor: "pointer",
-                }}
+              <FaUserCircle
+                size={40}
+                color="#555"
+                style={{ cursor: "pointer", marginRight: "40px" }} 
                 onClick={togglePopup}
               />
 
-              {isPopupVisible && (
-                <div
-                  className="popup"
+              <div
+                className="popup"
+                style={{
+                  position: "absolute",
+                  top: "60px",
+                  right: "0",
+                  backgroundColor: "white",
+                  padding: "1rem",
+                  boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                  borderRadius: "5px",
+                  zIndex: 1000,
+                  minWidth: "200px",
+                  textAlign: "center",
+                  opacity: isPopupVisible ? 1 : 0, 
+                  transform: isPopupVisible ? "translateY(0)" : "translateY(-10px)", 
+                  transition: "opacity 0.3s ease, transform 0.3s ease", 
+                  pointerEvents: isPopupVisible ? "auto" : "none",
+                }}
+              >
+                <h6 style={{ margin: "0", color: "#555", fontSize: "14px", whiteSpace: "nowrap", overflow: "hidden" }}>
+                  {user.displayName || "User"}
+                </h6>
+
+                <p style={{ margin: "5px 0", fontSize: "12px", color: "#777" }}>{user.email}</p>
+
+                <hr style={{ width: "100%", border: "none", borderBottom: "1px solid #ddd", margin: "10px 0" }} />
+
+                {/* Profile Button */}
+                <button
+                  onClick={() => navigate("/user")}
                   style={{
-                    position: "absolute",
-                    top: "60px",
-                    right: "0",
-                    backgroundColor: "white",
-                    padding: "1rem",
-                    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                    padding: "8px",
+                    backgroundColor: "#007bff",
+                    color: "white",
+                    border: "none",
                     borderRadius: "5px",
-                    zIndex: 1000,
-                    minWidth: "200px",
-                    textAlign: "center",
+                    cursor: "pointer",
+                    width: "100%",
+                    marginBottom: "10px",
                   }}
                 >
-                  <h6 style={{ margin: "0", color: "#555", fontSize: "14px", whiteSpace: "nowrap", overflow: "hidden" }}>
-                    {user.displayName || "User"}
-                  </h6>
+                  Profile
+                </button>
 
-                  <p style={{ margin: "5px 0", fontSize: "12px", color: "#777" }}>{user.email}</p>
-
-                  <hr style={{ width: "100%", border: "none", borderBottom: "1px solid #ddd", margin: "10px 0" }} />
-
-                  <button
-                    onClick={handleLogout}
-                    style={{
-                      padding: "8px",
-                      backgroundColor: "red",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "5px",
-                      cursor: "pointer",
-                      width: "100%",
-                    }}
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
+                {/* Logout Button */}
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    padding: "8px",
+                    backgroundColor: "red",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                    width: "100%",
+                  }}
+                >
+                  Logout
+                </button>
+              </div>
             </div>
           )}
         </nav>
+
         <div style={{ flexGrow: 1 }}>
           <h1
             style={{
@@ -154,7 +171,6 @@ const Home = () => {
             Existing Outlets
           </h1>
 
-
           <h1
             style={{
               fontSize: "24px",
@@ -167,7 +183,6 @@ const Home = () => {
           >
             Popular Categories
           </h1>
-
 
           <div
             className="faqs"
@@ -199,13 +214,6 @@ const Home = () => {
           </div>
         </div>
       </div>
-
-
-
-
-
-
-    
     </>
   );
 };
