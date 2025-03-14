@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaUserCircle } from "react-icons/fa";
+import { FaUserCircle, FaShoppingCart } from "react-icons/fa";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 
@@ -35,7 +35,7 @@ const Navbar = ({ user }) => {
       className="navbar"
       style={{
         backgroundColor: "white",
-        padding: "0 1rem",
+        padding: "0 2rem",
         height: "75px",
         display: "flex",
         alignItems: "center",
@@ -50,23 +50,50 @@ const Navbar = ({ user }) => {
     >
       {/* Logo */}
       <div className="navbar-brand" style={{ display: "flex", alignItems: "center" }}>
-        <Link to="/home">
+        <Link to="/home" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
           <img
             src="/eatbit-logo-dark.png"
             alt="EatBit Logo"
-            className="navbar-logo"
-            style={{ height: "80px", width: "auto" }}
+            style={{ height: "50px" }} // Adjust size as needed
           />
         </Link>
       </div>
 
-      {/* User Profile Section */}
+      {/* Navigation Links */}
+      <div className="nav-links" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <Link to="/home" style={activeLinkStyle}>
+          Home
+        </Link>
+        <Link to="/menu" style={navLinkStyle}>
+          Browse Menu
+        </Link>
+        <Link to="/offers" style={navLinkStyle}>
+          Special Offers
+        </Link>
+        <Link to="/outlets" style={navLinkStyle}>
+          Outlets
+        </Link>
+        <Link to="/track-order" style={navLinkStyle}>
+          Track Order
+        </Link>
+      </div>
+
+      {/* User Profile & Cart */}
       {user && (
-        <div className="user-profile" style={{ display: "flex", alignItems: "center", position: "relative" }}>
+        <div className="user-profile" style={{ display: "flex", alignItems: "center", position: "relative",marginRight: "60px" }}>
+          {/* Cart Icon */}
+          <FaShoppingCart
+            size={28}
+            color="#555"
+            style={{ cursor: "pointer", marginRight: "20px" }}
+            onClick={() => navigate("/cart")}
+          />
+
+          {/* User Icon */}
           <FaUserCircle
             size={40}
             color="#555"
-            style={{ cursor: "pointer", marginRight: "40px" }}
+            style={{ cursor: "pointer", marginRight: "20px" }}
             onClick={togglePopup}
           />
 
@@ -101,33 +128,13 @@ const Navbar = ({ user }) => {
             {/* Profile Button */}
             <button
               onClick={() => navigate("/user")}
-              style={{
-                padding: "8px",
-                backgroundColor: "#007bff",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-                width: "100%",
-                marginBottom: "10px",
-              }}
+              style={buttonStyle("#007bff")}
             >
               Profile
             </button>
 
             {/* Logout Button */}
-            <button
-              onClick={handleLogout}
-              style={{
-                padding: "8px",
-                backgroundColor: "red",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-                width: "100%",
-              }}
-            >
+            <button onClick={handleLogout} style={buttonStyle("red")}>
               Logout
             </button>
           </div>
@@ -136,5 +143,45 @@ const Navbar = ({ user }) => {
     </nav>
   );
 };
+
+// Styles
+const activeLinkStyle = {
+//   backgroundColor: "#FF8C00"
+  color: "black",
+  padding: "10px 20px",
+  borderRadius: "25px",
+  textDecoration: "none",
+  fontWeight: "bold",
+};
+
+const navLinkStyle = {
+  textDecoration: "none",
+  fontWeight: "bold",
+  color: "#101828",
+  padding: "10px 20px",
+  borderRadius: "25px",
+  transition: "background-color 0.3s ease",
+};
+
+const buttonStyle = (bgColor) => ({
+  padding: "8px",
+  backgroundColor: bgColor,
+  color: "white",
+  border: "none",
+  borderRadius: "5px",
+  cursor: "pointer",
+  width: "100%",
+  marginBottom: "10px",
+});
+
+/* Hover Effect */
+const styleTag = document.createElement("style");
+styleTag.innerHTML = `
+  .nav-links a:hover {
+    background-color: #FF8C00;
+    color: white !important;
+  }
+`;
+document.head.appendChild(styleTag);
 
 export default Navbar;
