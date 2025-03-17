@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { useNavigate } from "react-router-dom"; // 🔹 Import useNavigate
 import { auth } from "../firebase";
 import { FaUtensils, FaMotorcycle } from "react-icons/fa";
 import Navbar from "../components/Navbar";
@@ -7,7 +8,8 @@ import Navbar from "../components/Navbar";
 const Outlets = () => {
     const [user, loading, error] = useAuthState(auth);
     const [activeTab, setActiveTab] = useState("Dining Out");
-    const [fade, setFade] = useState(false); // For smooth animation
+    const [fade, setFade] = useState(false);
+    const navigate = useNavigate(); // 🔹 Hook for navigation
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error: {error.message}</p>;
@@ -20,9 +22,10 @@ const Outlets = () => {
         }, 200);
     };
 
+    // 🔹 Each outlet now has a name-based navigation
     const diningOutlets = [
         { name: "Delhi 65 Multicuisine", cuisine: "North Indian, Chinese", price: "₹400 for one", img: "/outlet1.jpg" },
-        { name: "ACS", cuisine: "Burger, Sandwich", price: "₹200 for one", img: "/outlet2.jpg" },
+        { name: "Down South Cafe", cuisine: "Burger, Sandwich", price: "₹200 for one", img: "/outlet2.jpg" },
         { name: "The Best", cuisine: "North Indian, Chinese", price: "₹400 for one", img: "/outlet3.jpg" },
     ];
 
@@ -55,8 +58,7 @@ const Outlets = () => {
                         fontWeight: activeTab === "Dining Out" ? "bold" : "normal",
                         borderBottom: activeTab === "Dining Out" ? "4px solid red" : "none",
                         transition: "color 0.4s ease-in-out, border-bottom 0.4s ease-in-out, transform 0.3s ease-in-out",
-                        transform: activeTab === "Dining Out" ? "scale(1.05)" : "scale(1)"
-
+                        transform: activeTab === "Dining Out" ? "scale(1.05)" : "scale(1)",
                     }}
                 >
                     <FaUtensils size={22} /> Dining Out
@@ -75,8 +77,7 @@ const Outlets = () => {
                         fontWeight: activeTab === "Delivery" ? "bold" : "normal",
                         borderBottom: activeTab === "Delivery" ? "4px solid red" : "none",
                         transition: "color 0.4s ease-in-out, border-bottom 0.4s ease-in-out, transform 0.3s ease-in-out",
-                        transform: activeTab === "Delivery" ? "scale(1.05)" : "scale(1)"
-
+                        transform: activeTab === "Delivery" ? "scale(1.05)" : "scale(1)",
                     }}
                 >
                     <FaMotorcycle size={22} /> Delivery
@@ -98,9 +99,9 @@ const Outlets = () => {
                         opacity: fade ? 0 : 1,
                     }}
                 >
-                    {outlets.map((outlet, index) => (
+                    {outlets.map((outlet) => (
                         <div
-                            key={index}
+                            key={outlet.name}
                             className="outlet-card"
                             style={{
                                 background: "white",
@@ -113,6 +114,7 @@ const Outlets = () => {
                             }}
                             onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
                             onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                            onClick={() => navigate(`/outlets/${outlet.name.toLowerCase().replace(/\s+/g, "-")}`)} // 🔹 Navigate using outlet name
                         >
                             <img src={outlet.img} alt={outlet.name} style={{ width: "100%", height: "180px", objectFit: "cover" }} />
                             <div style={{ padding: "10px" }}>

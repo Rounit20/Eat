@@ -3,6 +3,7 @@ import { auth } from "../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import Navbar from "../components/Navbar";
 
+
 const Home = () => {
   const [user, loading, error] = useAuthState(auth);
 
@@ -57,6 +58,7 @@ const Home = () => {
             Popular Categories
           </h1>
 
+          {/* FAQ Section */}
           <div
             className="faqs"
             style={{
@@ -73,7 +75,9 @@ const Home = () => {
               height: "200px",
             }}
           >
-            <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "10px" }}>Frequently Asked Questions</h2>
+            <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "10px" }}>
+              Frequently Asked Questions
+            </h2>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
               <div style={{ fontWeight: "bold" }}>Questions</div>
               <div style={{ fontWeight: "bold" }}>Answers</div>
@@ -87,6 +91,8 @@ const Home = () => {
           </div>
         </div>
       </div>
+
+      
     </>
   );
 };

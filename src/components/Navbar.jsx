@@ -104,7 +104,7 @@ const Navbar = ({ user }) => {
               position: "absolute",
               top: "60px",
               right: "0",
-              backgroundColor: "white",
+              backgroundColor: "rgb(244, 240, 240)",
               padding: "1rem",
               boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
               borderRadius: "5px",
@@ -146,7 +146,7 @@ const Navbar = ({ user }) => {
 
 // Styles
 const activeLinkStyle = {
-//   backgroundColor: "#FF8C00"
+  //backgroundColor: "#FF8C00"
   color: "black",
   padding: "10px 20px",
   borderRadius: "25px",
@@ -160,7 +160,7 @@ const navLinkStyle = {
   color: "#101828",
   padding: "10px 20px",
   borderRadius: "25px",
-  transition: "background-color 0.3s ease",
+  transition: "background-color 0.2s ease",
 };
 
 const buttonStyle = (bgColor) => ({
