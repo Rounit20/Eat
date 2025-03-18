@@ -1,16 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { FaStar, FaRegClock, FaPhoneAlt, FaPlus, FaMinus } from "react-icons/fa";
+import { FaStar, FaRegClock, FaPhoneAlt } from "react-icons/fa";
 import Navbar from "../components/Navbar";
 
 const OutletDetail = ({ user }) => {
   const { outletName } = useParams();
+  const navigate = useNavigate();
+
   const [restaurant, setRestaurant] = useState(null);
   const [menu, setMenu] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState({});
+  const [activeTab, setActiveTab] = useState(0);
+  const [fade, setFade] = useState(true);
+
+  // ✅ Load cart from localStorage on mount
+  useEffect(() => {
+    const savedCart = JSON.parse(localStorage.getItem("cart")) || {};
+    setCart(savedCart);
+  }, []);
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -35,24 +45,51 @@ const OutletDetail = ({ user }) => {
     fetchRestaurant();
   }, [outletName]);
 
+  // ✅ Sync cart with localStorage
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
+
+  // ✅ Add to Cart Function
   const addToCart = (item) => {
-    setCart((prevCart) => ({
-      ...prevCart,
-      [item.name]: prevCart[item.name] ? prevCart[item.name] + 1 : 1,
-    }));
+    setCart((prevCart) => {
+      const newCart = { ...prevCart };
+
+      if (newCart[item.name]) {
+        newCart[item.name].quantity += 1;
+      } else {
+        newCart[item.name] = { ...item, quantity: 1 };
+      }
+
+      return newCart;
+    });
   };
 
+  // ✅ Remove from Cart Function
   const removeFromCart = (item) => {
     setCart((prevCart) => {
-      if (!prevCart[item.name]) return prevCart;
-      const updatedCart = { ...prevCart };
-      if (updatedCart[item.name] === 1) {
-        delete updatedCart[item.name];
+      const newCart = { ...prevCart };
+
+      if (newCart[item.name]?.quantity > 1) {
+        newCart[item.name].quantity -= 1;
       } else {
-        updatedCart[item.name] -= 1;
+        delete newCart[item.name];
       }
-      return updatedCart;
+
+      return newCart;
     });
+  };
+
+  const handleTabClick = (index) => {
+    setFade(false);
+    setTimeout(() => {
+      setActiveTab(index);
+      setFade(true);
+    }, 150);
+  };
+
+  const goToCart = () => {
+    navigate("/cart");
   };
 
   if (loading) return <p className="loading">⏳ Loading menu...</p>;
@@ -60,175 +97,210 @@ const OutletDetail = ({ user }) => {
 
   return (
     <>
-      {/* ✅ Navbar */}
       <Navbar user={user} />
 
-      <div className="outlet-container">
-        <div className="content">
-          <div className="restaurant-header">
-            <h1>{restaurant.name}</h1>
-            <p><FaPhoneAlt /> {restaurant.contact}</p>
-            <p><FaRegClock /> {restaurant.timing}</p>
-            <div className="rating">
-              <FaStar color="gold" /> {restaurant.rating} ({restaurant.reviews} Reviews)
-            </div>
-          </div>
-
-          <h2 className="order-title">📌 Order Online</h2>
-
-          <div className="menu-list">
-            {menu.length > 0 ? (
-              menu.map((category, categoryIndex) => (
-                <div key={categoryIndex} className="menu-category">
-                  <h2 className="category-title">{category.category}</h2>
-                  <div className="category-items">
-                    {category.items.map((item, itemIndex) => (
-                      <div key={itemIndex} className="menu-item">
-                        <img
-                          src={item.image || "https://via.placeholder.com/150"}
-                          alt={item.name}
-                        />
-                        <h3>{item.name}</h3>
-                        <p>{item.description}</p>
-                        <p className="price">₹{item.price}</p>
-                        <div className="cart-controls">
-                          <button onClick={() => removeFromCart(item)}>
-                            <FaMinus />
-                          </button>
-                          <span>{cart[item.name] || 0}</span>
-                          <button onClick={() => addToCart(item)}>
-                            <FaPlus />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="no-menu">⚠️ No menu available for this restaurant.</p>
-            )}
+      <div className="outlet-container" style={{ marginTop: "100px" }}>
+        <div className="restaurant-header">
+          <h1>{restaurant.name}</h1>
+          <p><FaPhoneAlt /> {restaurant.contact}</p>
+          <p><FaRegClock /> {restaurant.timing}</p>
+          <div className="rating">
+            <FaStar color="gold" /> {restaurant.rating} ({restaurant.reviews} Reviews)
           </div>
         </div>
 
-        {/* ✅ Updated CSS Styles */}
+        <div className="content">
+          <div className="order-section">
+            <h2 className="order-title">📌 Order Online</h2>
+
+            <div className="tabs">
+              {menu.map((category, index) => (
+                <button
+                  key={index}
+                  className={`tab ${activeTab === index ? "active" : ""}`}
+                  onClick={() => handleTabClick(index)}
+                >
+                  {category.category}
+                </button>
+              ))}
+            </div>
+
+            <div className={`menu-list ${fade ? "fade-in" : ""}`}>
+              {menu[activeTab]?.items.map((item, itemIndex) => (
+                <div key={itemIndex} className="menu-card">
+                  <div className="menu-info">
+                    <div className="menu-header">
+                      <span className="bestseller">⭐ Bestseller</span>
+                      <h3>{item.name}</h3>
+                      <p className="price">₹{item.price}</p>
+                      <div className="rating-container">
+                        <FaStar color="green" />
+                        <span>{item.rating} ({item.reviews})</span>
+                      </div>
+                      <p className="description">{item.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="menu-image">
+                    <img
+                      src={item.image || "https://via.placeholder.com/150"}
+                      alt={item.name}
+                    />
+
+                    {cart[item.name] ? (
+                      <div className="quantity-control">
+                        <button onClick={() => removeFromCart(item)}>-</button>
+                        <span>{cart[item.name].quantity}</span>
+                        <button onClick={() => addToCart(item)}>+</button>
+                      </div>
+                    ) : (
+                      <button
+                        className="add-btn"
+                        onClick={() => addToCart(item)}
+                      >
+                        ADD
+                      </button>
+                    )}
+
+                    <p className="customizable">Customisable</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* 🛒 Go to Cart Button */}
+            <div className="cart-btn-container">
+              <button className="cart-btn" onClick={goToCart}>
+                Go to Cart ({Object.keys(cart).length} items)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ✅ Updated CSS */}
         <style>{`
+          /* ✅ Overall Layout */
           .outlet-container {
             font-family: Arial, sans-serif;
             background-color: #f9f9f9;
             min-height: 100vh;
-            padding-bottom: 20px;
-            margin-top: 80px; /* ✅ Fix: Pushes container below navbar */
+            padding-bottom: 50px;
           }
-          .loading, .error {
+
+          .restaurant-header {
+            background: #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px 20px;
             text-align: center;
-            font-size: 18px;
-            color: #ff5722;
-            margin-top: 20px;
+            border-bottom: 2px solid #ddd;
+            margin-top: 1800px;
           }
+
           .content {
+            margin-top: 40px;
             padding: 20px;
           }
-          .restaurant-header {
-            text-align: center;
-            padding: 15px;
-            border-bottom: 2px solid #ddd;
-            background-color: #fff;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            margin-top: 2900px;
+
+          .order-section {
+            margin-top: 20px;
           }
-          .restaurant-header h1 {
-            margin-bottom: 10px;
-          }
-          .rating {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
-            font-size: 16px;
-          }
+
           .order-title {
             text-align: center;
             font-size: 22px;
             margin-bottom: 15px;
             color: #ff5722;
           }
+
+          .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+          }
+
+          .tab {
+            padding: 12px 25px;
+            cursor: pointer;
+            font-size: 16px;
+            background: none;
+            border: none;
+            color: #555;
+            transition: color 0.3s, border-bottom 0.3s;
+          }
+
+          .tab:hover {
+            color: #ff5722;
+          }
+
+          .tab.active {
+            color: #ff5722;
+            border-bottom: 3px solid #ff5722;
+            font-weight: bold;
+          }
+
           .menu-list {
             display: flex;
             flex-direction: column;
-            gap: 25px;
+            gap: 30px;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
           }
-          .menu-category {
-            background-color: #fff;
-            padding: 10px;
-            border-radius: 10px;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+
+          .menu-list.fade-in {
+            opacity: 1;
           }
-          .category-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #ddd;
-          }
-          .category-items {
+
+          .menu-card {
             display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 10px;
-          }
-          .menu-item {
-            width: 250px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            text-align: center;
-            padding: 10px;
-            background-color: #fff;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
-          }
-          .menu-item:hover {
-            transform: scale(1.05);
-          }
-          .menu-item img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 5px;
-          }
-          .price {
-            font-weight: bold;
-            font-size: 16px;
-            margin-top: 5px;
-          }
-          .cart-controls {
-            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            margin-top: 10px;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
           }
-          .cart-controls button {
-            background-color: #ff5722;
+
+          .menu-card:hover {
+            transform: translateY(-5px);
+          }
+
+          .menu-image {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+
+          .menu-image img {
+            width: 150px;
+            height: 150px;
+            border-radius: 8px;
+            object-fit: cover;
+          }
+
+          .add-btn, .quantity-control button {
+            background: #4caf50;
             color: white;
             border: none;
-            padding: 5px 10px;
-            cursor: pointer;
             border-radius: 5px;
-            font-size: 16px;
+            cursor: pointer;
+            padding: 8px 20px;
+            margin: 5px;
           }
-          .cart-controls span {
-            margin: 0 10px;
-            font-size: 16px;
-            font-weight: bold;
+
+          .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
           }
-          .no-menu {
-            text-align: center;
+
+          .quantity-control span {
             font-size: 18px;
-            color: #777;
-            margin-top: 20px;
           }
+
         `}</style>
       </div>
     </>
