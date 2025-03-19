@@ -3,7 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { FaStar, FaRegClock, FaPhoneAlt } from "react-icons/fa";
-import Navbar from "../components/Navbar";
+import { useCart } from "../Context/CartContext";  // ✅ Import Cart Context
+        
 
 const OutletDetail = ({ user }) => {
   const { outletName } = useParams();
@@ -12,16 +13,13 @@ const OutletDetail = ({ user }) => {
   const [restaurant, setRestaurant] = useState(null);
   const [menu, setMenu] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [cart, setCart] = useState({});
   const [activeTab, setActiveTab] = useState(0);
   const [fade, setFade] = useState(true);
 
-  // ✅ Load cart from localStorage on mount
-  useEffect(() => {
-    const savedCart = JSON.parse(localStorage.getItem("cart")) || {};
-    setCart(savedCart);
-  }, []);
+  // ✅ Use Cart Context for Firebase cart integration
+  const { cart, setCart, loading: cartLoading } = useCart();
 
+  // ✅ Fetch restaurant details from Firestore
   useEffect(() => {
     const fetchRestaurant = async () => {
       try {
@@ -45,37 +43,28 @@ const OutletDetail = ({ user }) => {
     fetchRestaurant();
   }, [outletName]);
 
-  // ✅ Sync cart with localStorage
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  }, [cart]);
-
-  // ✅ Add to Cart Function
+  // ✅ Add item to cart (Firebase)
   const addToCart = (item) => {
     setCart((prevCart) => {
       const newCart = { ...prevCart };
-
       if (newCart[item.name]) {
         newCart[item.name].quantity += 1;
       } else {
         newCart[item.name] = { ...item, quantity: 1 };
       }
-
       return newCart;
     });
   };
 
-  // ✅ Remove from Cart Function
+  // ✅ Remove item from cart (Firebase)
   const removeFromCart = (item) => {
     setCart((prevCart) => {
       const newCart = { ...prevCart };
-
       if (newCart[item.name]?.quantity > 1) {
         newCart[item.name].quantity -= 1;
       } else {
         delete newCart[item.name];
       }
-
       return newCart;
     });
   };
@@ -92,12 +81,12 @@ const OutletDetail = ({ user }) => {
     navigate("/cart");
   };
 
-  if (loading) return <p className="loading">⏳ Loading menu...</p>;
+  if (loading || cartLoading) return <p className="loading">⏳ Loading menu...</p>;
   if (!restaurant) return <p className="error">❌ No restaurant found!</p>;
 
   return (
     <>
-      <Navbar user={user} />
+       
 
       <div className="outlet-container" style={{ marginTop: "100px" }}>
         <div className="restaurant-header">

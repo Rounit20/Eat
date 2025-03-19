@@ -1,25 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../firebase";
+import { useCart } from "../context/CartContext";  // ✅ Import CartContext
 
 const Cart = () => {
   const navigate = useNavigate();
   const [user] = useAuthState(auth);
-  
-  const [cart, setCart] = useState({});
+
+  const { cart, setCart, loading } = useCart();  // ✅ Use Firebase CartContext
   const [total, setTotal] = useState(0);
   const [salesTax, setSalesTax] = useState(0);
 
-  // ✅ Load cart from localStorage on mount
-  useEffect(() => {
-    const savedCart = JSON.parse(localStorage.getItem("cart")) || {};
-    setCart(savedCart);
-  }, []);
-
   // ✅ Calculate total price and tax
   useEffect(() => {
+    if (loading) return; // Avoid calculations while loading
     let subtotal = 0;
     Object.keys(cart).forEach((itemName) => {
       const item = cart[itemName];
@@ -29,9 +25,9 @@ const Cart = () => {
     const tax = subtotal * 0.1; // 10% sales tax
     setTotal(subtotal + tax);
     setSalesTax(tax);
-  }, [cart]);
+  }, [cart, loading]);
 
-  // ✅ Handle cart operations and update localStorage
+  // ✅ Handle cart operations (Firebase)
   const handleQuantityChange = (itemName, change) => {
     const newCart = { ...cart };
 
@@ -43,14 +39,22 @@ const Cart = () => {
       }
     }
 
-    setCart(newCart);
-    localStorage.setItem("cart", JSON.stringify(newCart));  // ✅ Sync with localStorage
+    setCart(newCart);  // ✅ Firebase will handle persistence
   };
 
   const handleCheckout = () => {
     alert("Proceeding to Checkout!");
     navigate("/checkout");
   };
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <Navbar user={user} />
+        <h2>⏳ Loading your cart...</h2>
+      </div>
+    );
+  }
 
   if (Object.keys(cart).length === 0) {
     return (
@@ -114,7 +118,7 @@ const Cart = () => {
           <button className="checkout-btn" onClick={handleCheckout}>Checkout</button>
         </div>
 
-        {/* ✅ CSS Styling */}
+        {/* ✅ Updated CSS */}
         <style>{`
           .cart-container {
             max-width: 1100px;
@@ -239,12 +243,12 @@ const Cart = () => {
             background: #45a049;
           }
 
-          .empty-cart {
+          .empty-cart, .loading-container {
             text-align: center;
             margin-top: 100px;
           }
 
-          .empty-cart h2 {
+          .empty-cart h2, .loading-container h2 {
             font-size: 24px;
           }
         `}</style>
