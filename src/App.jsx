@@ -1,7 +1,17 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "./firebase";
+import "./styles/App.css"; 
+import OrdersPage from "./pages/OrdersPage";
+import Checkout from "./pages/Checkout";
+
+
+
+
+// In your App.jsx or Router setup
+
+
 import LandingPage from "./pages/LandingPage";
 import Home from "./pages/Home";
 import LoginPage from "./pages/LoginPage";
@@ -12,7 +22,36 @@ import OutletDetail from "./pages/OutletDetail";
 import Cart from "./pages/Cart";
 import PrivateRoute from "./components/PrivateRoute";
 import Navbar from "./components/Navbar";
-import { CartProvider } from "./context/CartContext";  // ✅ Import CartProvider
+import { CartProvider } from "./context/CartContext";
+
+function AppContent({ user }) {
+  const location = useLocation();
+  const hideNavbarPaths = ["/", "/login", "/signup"];
+  const shouldHideNavbar = hideNavbarPaths.includes(location.pathname);
+
+  return (
+    <div className="app-container">
+      {!shouldHideNavbar && <Navbar user={user} />}
+      
+      <div className={`main-content ${shouldHideNavbar ? "no-navbar" : "with-navbar"}`}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route element={<PrivateRoute />}>
+            <Route path="/home" element={<Home />} />
+            <Route path="/user" element={<UserData />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/outlets" element={<Outlets />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/outlets/:outletName" element={<OutletDetail />} />
+            <Route path="/cart" element={<Cart />} />
+          </Route>
+        </Routes>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   const [user, loading] = useAuthState(auth);
@@ -20,26 +59,9 @@ function App() {
   if (loading) return <p>Loading...</p>;
 
   return (
-    <CartProvider user={user}>   {/* ✅ Wrap entire app with CartProvider */}
+    <CartProvider user={user}>
       <Router>
-        <Navbar user={user} />
-
-        <div className="main-content">
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/outlets" element={<Outlets />} />
-            
-            <Route path="/outlets/:outletName" element={<OutletDetail />} />
-            <Route path="/cart" element={<Cart />} />
-
-            <Route element={<PrivateRoute />}>
-              <Route path="/home" element={<Home />} />
-              <Route path="/user" element={<UserData />} />
-            </Route>
-          </Routes>
-        </div>
+        <AppContent user={user} />
       </Router>
     </CartProvider>
   );

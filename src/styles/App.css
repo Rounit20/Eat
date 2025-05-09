@@ -1,4 +1,10 @@
 /* ✅ Reset root padding and margin */
+html, body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -6,21 +12,36 @@
   text-align: center;
 }
 
+/* ✅ App container layout */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 /* ✅ Navbar styling */
 .navbar {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 75px; 
+  right: 0;
+  height: 75px;
   background-color: white;
   z-index: 1000;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
 }
 
-/* ✅ Ensure content starts below the navbar */
-.main-content {
-  margin-top: 100px; /* ✅ Push content below the navbar */
+/* ✅ Main content area spacing */
+.main-content.with-navbar {
+  margin-top: 555px;  /* Push below fixed navbar */
+  padding: 2rem;
+}
+
+.main-content.no-navbar {
   padding: 2rem;
 }
 
@@ -51,7 +72,7 @@
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s;
-  margin-bottom: 20px; /* ✅ Ensure proper spacing between menu cards */
+  margin-bottom: 20px;
 }
 
 .menu-card:hover {
