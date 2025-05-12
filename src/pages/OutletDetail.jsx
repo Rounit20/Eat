@@ -4,7 +4,6 @@ import { db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { FaStar, FaRegClock, FaPhoneAlt } from "react-icons/fa";
 import { useCart } from "../Context/CartContext";  // ✅ Import Cart Context
-        
 
 const OutletDetail = ({ user }) => {
   const { outletName } = useParams();
@@ -17,7 +16,7 @@ const OutletDetail = ({ user }) => {
   const [fade, setFade] = useState(true);
 
   // ✅ Use Cart Context for Firebase cart integration
-  const { cart, setCart, loading: cartLoading } = useCart();
+  const { cart, setCart, loading: cartLoading, setShopName } = useCart();  // Destructure setShopName
 
   // ✅ Fetch restaurant details from Firestore
   useEffect(() => {
@@ -43,14 +42,21 @@ const OutletDetail = ({ user }) => {
     fetchRestaurant();
   }, [outletName]);
 
+  // ✅ Store shop name in the Cart Context when the outlet page loads
+  useEffect(() => {
+    if (outletName && cart.shopName !== outletName) {
+      setShopName(outletName);  // Update the shop name in Cart Context only if it differs from the current one
+    }
+  }, [outletName, setShopName, cart.shopName]);
+
   // ✅ Add item to cart (Firebase)
   const addToCart = (item) => {
     setCart((prevCart) => {
       const newCart = { ...prevCart };
-      if (newCart[item.name]) {
-        newCart[item.name].quantity += 1;
+      if (newCart.items[item.name]) {
+        newCart.items[item.name].quantity += 1;
       } else {
-        newCart[item.name] = { ...item, quantity: 1 };
+        newCart.items[item.name] = { ...item, quantity: 1 };
       }
       return newCart;
     });
@@ -60,10 +66,10 @@ const OutletDetail = ({ user }) => {
   const removeFromCart = (item) => {
     setCart((prevCart) => {
       const newCart = { ...prevCart };
-      if (newCart[item.name]?.quantity > 1) {
-        newCart[item.name].quantity -= 1;
+      if (newCart.items[item.name]?.quantity > 1) {
+        newCart.items[item.name].quantity -= 1;
       } else {
-        delete newCart[item.name];
+        delete newCart.items[item.name];
       }
       return newCart;
     });
@@ -86,8 +92,6 @@ const OutletDetail = ({ user }) => {
 
   return (
     <>
-       
-
       <div className="outlet-container" style={{ marginTop: "100px" }}>
         <div className="restaurant-header">
           <h1>{restaurant.name}</h1>
@@ -136,10 +140,10 @@ const OutletDetail = ({ user }) => {
                       alt={item.name}
                     />
 
-                    {cart[item.name] ? (
+                    {cart.items[item.name] ? (
                       <div className="quantity-control">
                         <button onClick={() => removeFromCart(item)}>-</button>
-                        <span>{cart[item.name].quantity}</span>
+                        <span>{cart.items[item.name].quantity}</span>
                         <button onClick={() => addToCart(item)}>+</button>
                       </div>
                     ) : (
@@ -160,7 +164,7 @@ const OutletDetail = ({ user }) => {
             {/* 🛒 Go to Cart Button */}
             <div className="cart-btn-container">
               <button className="cart-btn" onClick={goToCart}>
-                Go to Cart ({Object.keys(cart).length} items)
+                Go to Cart ({Object.keys(cart.items).length} items)
               </button>
             </div>
           </div>
@@ -289,7 +293,6 @@ const OutletDetail = ({ user }) => {
           .quantity-control span {
             font-size: 18px;
           }
-
         `}</style>
       </div>
     </>

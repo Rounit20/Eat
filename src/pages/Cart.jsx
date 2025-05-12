@@ -3,48 +3,65 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../firebase";
-import { useCart } from "../context/CartContext";  // ✅ Import CartContext
+import { useCart } from "../context/CartContext";
 
 const Cart = () => {
   const navigate = useNavigate();
   const [user] = useAuthState(auth);
-
-  const { cart, setCart, loading } = useCart();  // ✅ Use Firebase CartContext
+  const { cart, setCart, loading } = useCart();
   const [total, setTotal] = useState(0);
   const [salesTax, setSalesTax] = useState(0);
 
-  // ✅ Calculate total price and tax
+  // ✅ Extract valid items
+  const validCartItems = Object.entries(cart.items || {}).filter(
+    ([_, item]) =>
+      typeof item === "object" &&
+      item !== null &&
+      typeof item.price === "number" &&
+      typeof item.quantity === "number"
+  );
+
+  // ✅ Calculate total and tax
   useEffect(() => {
-    if (loading) return; // Avoid calculations while loading
+    if (loading) return;
+
     let subtotal = 0;
-    Object.keys(cart).forEach((itemName) => {
-      const item = cart[itemName];
+    validCartItems.forEach(([_, item]) => {
       subtotal += item.price * item.quantity;
     });
 
-    const tax = subtotal * 0.1; // 10% sales tax
-    setTotal(subtotal + tax);
+    const tax = subtotal * 0.1;
     setSalesTax(tax);
+    setTotal(subtotal + tax);
   }, [cart, loading]);
 
-  // ✅ Handle cart operations (Firebase)
+  // ✅ Change quantity of items
   const handleQuantityChange = (itemName, change) => {
-    const newCart = { ...cart };
+    const updatedItems = { ...cart.items };
 
-    if (newCart[itemName]) {
-      newCart[itemName].quantity += change;
-
-      if (newCart[itemName].quantity <= 0) {
-        delete newCart[itemName];  // Remove item when quantity is 0
+    if (updatedItems[itemName]) {
+      updatedItems[itemName].quantity += change;
+      if (updatedItems[itemName].quantity <= 0) {
+        delete updatedItems[itemName];
       }
     }
 
-    setCart(newCart);  // ✅ Firebase will handle persistence
+    setCart({
+      ...cart,
+      items: updatedItems,
+    });
   };
 
+  // ✅ Handle checkout
   const handleCheckout = () => {
+    if (!validCartItems.length) {
+      alert("Your cart is empty, add items to proceed!");
+      return;
+    }
+
+    const shopName = cart.shopName || "DefaultShop";
     alert("Proceeding to Checkout!");
-    navigate("/checkout");
+    navigate(`/checkout/${shopName}`);
   };
 
   if (loading) {
@@ -56,7 +73,7 @@ const Cart = () => {
     );
   }
 
-  if (Object.keys(cart).length === 0) {
+  if (validCartItems.length === 0) {
     return (
       <div className="empty-cart">
         <Navbar user={user} />
@@ -68,9 +85,8 @@ const Cart = () => {
   return (
     <>
       <Navbar user={user} />
-
       <div className="cart-container">
-        <h1>Your Cart ({Object.keys(cart).length} items)</h1>
+        <h1>Your Cart ({validCartItems.length} items)</h1>
 
         <div className="cart-items">
           <div className="cart-header">
@@ -80,28 +96,28 @@ const Cart = () => {
             <span>Total</span>
           </div>
 
-          {Object.keys(cart).map((itemName, index) => {
-            const item = cart[itemName];
+          {validCartItems.map(([itemName, item], index) => {
+            const { price, quantity, image, description } = item;
 
             return (
               <div key={index} className="cart-item">
                 <div className="item-info">
-                  <img src={item.image || "https://via.placeholder.com/100"} alt={itemName} />
+                  <img src={image || "https://via.placeholder.com/100"} alt={itemName} />
                   <div>
                     <h3>{itemName}</h3>
-                    <p>{item.description}</p>
+                    <p>{description}</p>
                   </div>
                 </div>
 
-                <div className="item-price">₹{item.price.toFixed(2)}</div>
+                <div className="item-price">₹{price.toFixed(2)}</div>
 
                 <div className="quantity-control">
                   <button onClick={() => handleQuantityChange(itemName, -1)}>-</button>
-                  <span>{item.quantity}</span>
+                  <span>{quantity}</span>
                   <button onClick={() => handleQuantityChange(itemName, 1)}>+</button>
                 </div>
 
-                <div className="item-total">₹{(item.price * item.quantity).toFixed(2)}</div>
+                <div className="item-total">₹{(price * quantity).toFixed(2)}</div>
               </div>
             );
           })}
@@ -114,11 +130,11 @@ const Cart = () => {
             <hr />
             <h2>Grand Total: <span>₹{total.toFixed(2)}</span></h2>
           </div>
-
           <button className="checkout-btn" onClick={handleCheckout}>Checkout</button>
         </div>
 
-        {/* ✅ Updated CSS */}
+        
+
         <style>{`
           .cart-container {
             max-width: 1100px;
